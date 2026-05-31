@@ -1,0 +1,18 @@
+1) Open VS Code terminal in your assignment folder.
+
+2) Backend:
+cd backend
+npm install
+copy .env.example .env
+npm run dev
+
+3) Frontend, in another terminal:
+cd frontend
+npm install
+copy .env.example .env
+npm run dev
+
+4) Open:
+http://localhost:5173
+
+5) After registering, check backend terminal for the verification link.
