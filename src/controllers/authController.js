@@ -38,16 +38,27 @@ export const register = asyncHandler(async (req, res) => {
 
   const verificationLink = `${env.CLIENT_URL}/verify-email/${verificationToken}`;
 
-  await sendVerificationEmail({
-    to: user.email,
-    username: user.username,
-    verificationLink,
-  });
+    let emailStatus = {
+      sent: false,
+      fallback: false,
+    };
 
-  return res.status(201).json({
-    message: 'Registration successful. Please verify your email before logging in.',
+    try {
+      emailStatus = await sendVerificationEmail({
+        to: user.email,
+        username: user.username,
+        verificationLink,
+      });
+    } catch (emailError) {
+      console.error('Email sending failed:', emailError.message);
+    }
+
+    return res.status(201).json({
+      message: emailStatus.sent
+        ? 'Registration successful. Please check your email to verify your account.'
+        : 'Registration successful. Verification link was generated. Please check backend logs if email was not sent.',
+    });
   });
-});
 
 export const verifyEmail = asyncHandler(async (req, res) => {
   const { token } = req.params;
