@@ -57,12 +57,19 @@ export const register = asyncHandler(async (req, res) => {
       message: emailStatus.sent
         ? 'Registration successful. Please check your email to verify your account.'
         : 'Registration successful. Verification link was generated. Please check backend logs if email was not sent.',
-        emailDebug: {
-          sent: emailStatus.sent,
-          fallback: emailStatus.fallback,
-          error: emailStatus.error || null,
-          id: emailStatus.id || null,
+      emailDebug: {
+        sent: emailStatus.sent,
+        fallback: emailStatus.fallback,
+        error: emailStatus.error || null,
+        id: emailStatus.id || null,
+        envCheck: {
+          hasGoogleClientId: Boolean(env.GOOGLE_CLIENT_ID),
+          hasGoogleClientSecret: Boolean(env.GOOGLE_CLIENT_SECRET),
+          hasGoogleRefreshToken: Boolean(env.GOOGLE_REFRESH_TOKEN),
+          hasGmailFrom: Boolean(env.GMAIL_FROM),
+          gmailFrom: env.GMAIL_FROM || null,
         },
+      },
     });
   });
 
