@@ -11,11 +11,11 @@ export const env = {
   REFRESH_TOKEN_DAYS: Number(process.env.REFRESH_TOKEN_DAYS || 7),
   CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:5173',
   SERVER_URL: process.env.SERVER_URL || `http://localhost:${process.env.PORT || 5000}`,
-  SMTP_HOST: process.env.SMTP_HOST,
-  SMTP_PORT: Number(process.env.SMTP_PORT || 587),
-  SMTP_USER: process.env.SMTP_USER,
-  SMTP_PASS: process.env.SMTP_PASS,
-  SMTP_FROM: process.env.SMTP_FROM || 'URL Shortener <no-reply@example.com>',
+
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+  GOOGLE_REFRESH_TOKEN: process.env.GOOGLE_REFRESH_TOKEN,
+  GMAIL_FROM: process.env.GMAIL_FROM,
 };
 
 if (!env.MONGO_URI) {
