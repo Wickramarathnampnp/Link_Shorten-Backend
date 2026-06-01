@@ -24,6 +24,18 @@ const createRawEmail = ({ to, from, subject, html }) => {
 };
 
 export const sendVerificationEmail = async ({ to, username, verificationLink }) => {
+  console.log('[EMAIL] sendVerificationEmail called');
+  console.log('[EMAIL] To:', to);
+  console.log('[EMAIL] GMAIL_FROM:', env.GMAIL_FROM);
+
+  console.log('[EMAIL] Env check:', {
+    hasGoogleClientId: Boolean(env.GOOGLE_CLIENT_ID),
+    hasGoogleClientSecret: Boolean(env.GOOGLE_CLIENT_SECRET),
+    hasGoogleRefreshToken: Boolean(env.GOOGLE_REFRESH_TOKEN),
+    hasGmailFrom: Boolean(env.GMAIL_FROM),
+    clientUrl: env.CLIENT_URL,
+  });
+
   const subject = 'Verify your URL Shortener account';
 
   const html = `
@@ -62,6 +74,7 @@ export const sendVerificationEmail = async ({ to, username, verificationLink }) 
     !env.GOOGLE_REFRESH_TOKEN ||
     !env.GMAIL_FROM
   ) {
+    console.log('[EMAIL] Missing Gmail API variables. Falling back to log link.');
     console.log('\n================ EMAIL VERIFICATION LINK ================');
     console.log(`To: ${to}`);
     console.log(verificationLink);
@@ -73,38 +86,74 @@ export const sendVerificationEmail = async ({ to, username, verificationLink }) 
     };
   }
 
-  const oauth2Client = new google.auth.OAuth2(
-    env.GOOGLE_CLIENT_ID,
-    env.GOOGLE_CLIENT_SECRET,
-    'https://developers.google.com/oauthplayground'
-  );
+  try {
+    console.log('[EMAIL] Creating OAuth2 client...');
 
-  oauth2Client.setCredentials({
-    refresh_token: env.GOOGLE_REFRESH_TOKEN,
-  });
+    const oauth2Client = new google.auth.OAuth2(
+      env.GOOGLE_CLIENT_ID,
+      env.GOOGLE_CLIENT_SECRET,
+      'https://developers.google.com/oauthplayground'
+    );
 
-  const gmail = google.gmail({
-    version: 'v1',
-    auth: oauth2Client,
-  });
+    oauth2Client.setCredentials({
+      refresh_token: env.GOOGLE_REFRESH_TOKEN,
+    });
 
-  const raw = createRawEmail({
-    to,
-    from: env.GMAIL_FROM,
-    subject,
-    html,
-  });
+    console.log('[EMAIL] Creating Gmail client...');
 
-  const result = await gmail.users.messages.send({
-    userId: 'me',
-    requestBody: {
-      raw,
-    },
-  });
+    const gmail = google.gmail({
+      version: 'v1',
+      auth: oauth2Client,
+    });
 
-  return {
-    sent: true,
-    fallback: false,
-    id: result.data.id,
-  };
+    const raw = createRawEmail({
+      to,
+      from: env.GMAIL_FROM,
+      subject,
+      html,
+    });
+
+    console.log('[EMAIL] Sending Gmail API message...');
+
+    const result = await gmail.users.messages.send({
+      userId: 'me',
+      requestBody: {
+        raw,
+      },
+    });
+
+    console.log('[EMAIL] Gmail API send success:', {
+      messageId: result.data.id,
+      threadId: result.data.threadId,
+    });
+
+    return {
+      sent: true,
+      fallback: false,
+      id: result.data.id,
+    };
+  } catch (error) {
+    console.error('[EMAIL] Gmail API send failed');
+
+    console.error('[EMAIL] Error message:', error.message);
+
+    if (error.code) {
+      console.error('[EMAIL] Error code:', error.code);
+    }
+
+    if (error.response?.data) {
+      console.error('[EMAIL] Google error response:', JSON.stringify(error.response.data, null, 2));
+    }
+
+    console.log('\n================ EMAIL VERIFICATION LINK ================');
+    console.log(`To: ${to}`);
+    console.log(verificationLink);
+    console.log('=========================================================\n');
+
+    return {
+      sent: false,
+      fallback: true,
+      error: error.message,
+    };
+  }
 };
